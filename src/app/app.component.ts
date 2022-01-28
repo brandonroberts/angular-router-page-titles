@@ -1,4 +1,7 @@
 import { Component } from '@angular/core';
+import { Title } from '@angular/platform-browser';
+import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
+import { filter, map } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -14,13 +17,10 @@ import { Component } from '@angular/core';
     <h2>Here are some links to help you start: </h2>
     <ul>
       <li>
-        <h2><a target="_blank" rel="noopener" href="https://angular.io/tutorial">Tour of Heroes</a></h2>
+        <h2><a routerLink="/home">Home</a></h2>
       </li>
       <li>
-        <h2><a target="_blank" rel="noopener" href="https://angular.io/cli">CLI Documentation</a></h2>
-      </li>
-      <li>
-        <h2><a target="_blank" rel="noopener" href="https://blog.angular.io/">Angular blog</a></h2>
+        <h2><a routerLink="/about">About</a></h2>
       </li>
     </ul>
     <router-outlet></router-outlet>
@@ -29,4 +29,29 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'angular-router-page-titles';
+
+  constructor(private router: Router, private titleService: Title) {}
+
+  ngOnInit() {
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        map(() => {
+          let route: ActivatedRoute = this.router.routerState.root;
+          let routeTitle = '';
+          while (route!.firstChild) {
+            route = route.firstChild;
+          }
+          if (route.snapshot.data['title']) {
+            routeTitle = route!.snapshot.data['title'];
+          }
+          return routeTitle;
+        })
+      )
+      .subscribe((title: string) => {
+        if (title) {
+          this.titleService.setTitle(`My App - ${title}`);
+        }
+      });
+  }  
 }
